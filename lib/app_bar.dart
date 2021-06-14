@@ -1,0 +1,20 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
+const appTitle = "Knesset Vote";
+
+class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
+  /// you can add more fields that meet your needs
+
+  const MyAppBar({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      title: Text(appTitle),
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(AppBar().preferredSize.height);
+}
