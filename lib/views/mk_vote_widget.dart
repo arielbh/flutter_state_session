@@ -2,34 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:knesset_app/app_bar.dart';
 import 'package:knesset_app/main.dart';
-import 'package:knesset_app/models/mk.dart';
 import 'package:knesset_app/models/vote.dart';
+import 'package:knesset_app/stores/voting_store.dart';
 
-class MkVoteWidget extends StatefulWidget {
-  final KnessetMember member;
-  MkVoteWidget({Key? key, required this.member}) : super(key: key);
-
-  @override
-  _MkVoteWidgetState createState() => _MkVoteWidgetState();
-}
-
-class _MkVoteWidgetState extends State<MkVoteWidget> {
-  var _secondsToVote = 6;
-  late Timer _timer;
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (_secondsToVote == 0) {
-        _onVote(context, VoteOptions.abstain);
-        return;
-      }
-      setState(() {
-        _secondsToVote--;
-      });
-    });
+class MkVoteWidget extends StatelessWidget {
+  final VotingStore votingStore;
+  MkVoteWidget({Key? key, required this.votingStore}) : super(key: key) {
+    votingStore.startTimer();
   }
 
   Widget _createVoteButton(BuildContext context, VoteOptions vote) => Padding(
@@ -42,6 +24,7 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return WillPopScope(
       onWillPop: () async {
         _onVote(context, VoteOptions.abstain);
@@ -55,14 +38,21 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Text(
-                "${widget.member.name} Votes",
+                "${votingStore.member.name} Votes",
                 style: theme.textTheme.headline3,
               ),
             ),
-            Text(
-              "Seconds to Vote: $_secondsToVote",
-              style: theme.textTheme.headline5,
-            ),
+            Observer(builder: (_) {
+              if (votingStore.secondsToVote == 0) {
+                WidgetsBinding.instance!.addPostFrameCallback((_) {
+                  _onVote(context, VoteOptions.abstain);
+                });
+              }
+              return Text(
+                "Seconds to Vote: ${votingStore.secondsToVote}",
+                style: theme.textTheme.headline5,
+              );
+            }),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               _createVoteButton(context, VoteOptions.favor),
               _createVoteButton(context, VoteOptions.abstain),
@@ -75,8 +65,7 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
   }
 
   void _onVote(BuildContext context, VoteOptions vote) {
-    _timer.cancel();
-    locator<Vote>().addVote(widget.member, vote);
-    Navigator.pop(context, vote);
+    voteStore.addVote(votingStore.member, vote);
+    Navigator.pop(context);
   }
 }
