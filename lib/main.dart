@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: appTitle,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<KnessetMember> _members = [];
-  Map<KnessetMember, Vote> _votes = {};
+  Vote _vote = Vote({});
   @override
   void initState() {
     super.initState();
@@ -48,18 +48,18 @@ class _MyHomePageState extends State<MyHomePage> {
             ? Center(child: CircularProgressIndicator())
             : Column(
                 children: [
-                  VoteTotalsWidget(votes: _votes),
+                  VoteTotalsWidget(vote: _vote),
                   Expanded(
                     child: MkListWidget(
                         members: _members,
-                        votes: _votes,
+                        vote: _vote,
                         onSelectMember: (member) async {
-                          final vote = await Navigator.push<Vote>(context, MaterialPageRoute(builder: (context) {
+                          final vote = await Navigator.push<VoteOptions>(context, MaterialPageRoute(builder: (context) {
                             return MkVoteWidget(member: member);
                           }));
                           if (vote != null) {
                             setState(() {
-                              _votes[vote.member] = vote;
+                              _vote.addVote(member, vote);
                             });
                           }
                         }),

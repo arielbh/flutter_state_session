@@ -4,10 +4,11 @@ import 'package:knesset_app/models/mk.dart';
 enum VoteOptions { favor, oppose, abstain }
 
 class Vote {
-  final KnessetMember member;
-  final VoteOptions result;
+  final Map<KnessetMember, VoteOptions> votes;
 
-  Vote(this.member, this.result);
+  Vote(this.votes);
+
+  void addVote(KnessetMember member, VoteOptions vote) => votes[member] = vote;
 }
 
 extension VoteOptionsString on VoteOptions {

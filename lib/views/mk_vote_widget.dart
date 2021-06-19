@@ -22,7 +22,7 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
     super.initState();
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_secondsToVote == 0) {
-        _onVote(VoteOptions.abstain);
+        _onVote(context, VoteOptions.abstain);
         return;
       }
       setState(() {
@@ -31,19 +31,19 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
     });
   }
 
-  Widget _createVoteButton(VoteOptions vote) => Padding(
+  Widget _createVoteButton(BuildContext context, VoteOptions vote) => Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
           child: Text(vote.display),
           style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(vote.color)),
-          onPressed: () => _onVote(vote)));
+          onPressed: () => _onVote(context, vote)));
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return WillPopScope(
       onWillPop: () async {
-        _onVote(VoteOptions.abstain);
+        _onVote(context, VoteOptions.abstain);
         return Future.value(false);
       },
       child: Scaffold(
@@ -51,18 +51,21 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              "${widget.member.name} Votes",
-              style: theme.textTheme.headline3,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Text(
+                "${widget.member.name} Votes",
+                style: theme.textTheme.headline3,
+              ),
             ),
             Text(
               "Seconds to Vote: $_secondsToVote",
               style: theme.textTheme.headline5,
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _createVoteButton(VoteOptions.favor),
-              _createVoteButton(VoteOptions.abstain),
-              _createVoteButton(VoteOptions.oppose)
+              _createVoteButton(context, VoteOptions.favor),
+              _createVoteButton(context, VoteOptions.abstain),
+              _createVoteButton(context, VoteOptions.oppose)
             ])
           ],
         ),
@@ -70,8 +73,8 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
     );
   }
 
-  void _onVote(VoteOptions vote) {
+  void _onVote(BuildContext context, VoteOptions vote) {
     _timer.cancel();
-    Navigator.pop(context, Vote(widget.member, vote));
+    Navigator.pop(context, vote);
   }
 }
