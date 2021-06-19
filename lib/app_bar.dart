@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-const appTitle = "Knesset Vote: BLoC";
+const appTitle = "Knesset Vote: Redux (+ Thunk)";
 
 class MyAppBar extends StatelessWidget implements PreferredSizeWidget {
   const MyAppBar({Key? key}) : super(key: key);

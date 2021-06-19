@@ -1,37 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:knesset_app/blocs/vote_bloc.dart';
-import 'package:knesset_app/blocs/voting_bloc.dart';
-import 'package:knesset_app/models/mk.dart';
+import 'package:flutter_redux/flutter_redux.dart';
+import 'package:knesset_app/models/app_state.dart';
 import 'package:knesset_app/models/vote.dart';
+import 'package:knesset_app/viewModels/list_view_model.dart';
 import 'package:knesset_app/views/mk_vote_widget.dart';
 
 class MkListWidget extends StatelessWidget {
-  final List<KnessetMember> members;
-  const MkListWidget({Key? key, required this.members}) : super(key: key);
+  const MkListWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocBuilder<VoteBloc, VoteState>(
-        builder: (context, state) => ListView.builder(
-            itemCount: members.length,
+    return StoreConnector<AppState, ListViewModel>(
+        converter: (store) => ListViewModel(store.state.members, store.state.vote),
+        builder: (context, viewModel) => ListView.builder(
+            itemCount: viewModel.members.length,
             itemBuilder: (BuildContext context, int index) {
-              final member = members[index];
+              final member = viewModel.members[index];
               final name = member.name;
-              final voteOption = state.vote.votes[member];
+              final voteOption = viewModel.vote.votes[member];
 
               return Column(
                 children: [
                   ListTile(
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) {
-                      return BlocProvider(
-                        create: (context) => VotingBloc(member: member, voteBloc: context.read<VoteBloc>()),
-                        child: MkVoteWidget(member: member),
-                      );
-                    })),
+                    onTap: () =>
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => MkVoteWidget(member: member))),
                     leading: CircleAvatar(
                       child: new Icon(Icons.account_box),
                     ),
@@ -48,7 +43,7 @@ class MkListWidget extends StatelessWidget {
                           )
                         : null,
                   ),
-                  new Divider(),
+                  Divider(),
                 ],
               );
             }));
