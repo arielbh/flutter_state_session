@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:knesset_app/app_bar.dart';
-import 'package:knesset_app/models/mk.dart';
-import 'package:knesset_app/models/vote.dart';
+import 'package:knesset_app/blocs/members_bloc.dart';
+import 'package:knesset_app/blocs/vote_bloc.dart';
 import 'package:knesset_app/services/mk_data_service.dart';
 import 'package:knesset_app/views/mk_list_widget.dart';
 import 'package:knesset_app/views/vote_totals_widget.dart';
-import 'package:provider/provider.dart';
 
-//TODO: Empasize the root provider and Vote is now notifier
 void main() {
-  runApp(MultiProvider(
-    providers: [
-      Provider<MkDataService>(create: (_) => MkDataService()),
-      ChangeNotifierProvider(create: (_) => Vote({})),
-    ],
-    child: MyApp(),
-  ));
+  runApp(MultiBlocProvider(providers: [
+    BlocProvider<MembersBloc>(
+      create: (context) => MembersBloc(dataService: MkDataService()),
+    ),
+    BlocProvider<VoteBloc>(
+      create: (context) => VoteBloc(),
+    ),
+  ], child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 //TODO: Empasize how most widgets (except vote, tell them why) are now stateless
 class MyHomePage extends StatelessWidget {
   MyHomePage({Key? key}) : super(key: key);
@@ -38,19 +39,25 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: MyAppBar(),
-        body: FutureBuilder<Iterable<KnessetMember>>(
-            future: context.watch<MkDataService>().getMembers(),
-            initialData: [],
-            builder: (context, result) {
-              final members = result.data?.toList() ?? [];
-              return members.isEmpty
-                  ? Center(child: CircularProgressIndicator())
-                  : Column(children: [
-                      VoteTotalsWidget(),
-                      Expanded(
-                        child: MkListWidget(members: members),
-                      ),
-                    ]);
-            }));
+        body: BlocBuilder<MembersBloc, MembersState>(
+          builder: (context, membersState) {
+            return BlocBuilder<VoteBloc, VoteState>(builder: (context, votingState) {
+              if (membersState is MembersInitial) {
+                return CircularProgressIndicator();
+              }
+              if (membersState is MembersLoadedState) {
+                return Column(
+                  children: [
+                    VoteTotalsWidget(),
+                    Expanded(
+                      child: MkListWidget(members: membersState.members.toList()),
+                    ),
+                  ],
+                );
+              }
+              return Center(child: Text("Something went wrong"));
+            });
+          },
+        ));
   }
 }

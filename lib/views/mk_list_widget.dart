@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:knesset_app/blocs/vote_bloc.dart';
+import 'package:knesset_app/blocs/voting_bloc.dart';
 import 'package:knesset_app/models/mk.dart';
 import 'package:knesset_app/models/vote.dart';
 import 'package:knesset_app/views/mk_vote_widget.dart';
-import 'package:provider/provider.dart';
 
 class MkListWidget extends StatelessWidget {
   final List<KnessetMember> members;
@@ -13,19 +15,23 @@ class MkListWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Consumer<Vote>(
-        builder: (context, vote, child) => ListView.builder(
+    return BlocBuilder<VoteBloc, VoteState>(
+        builder: (context, state) => ListView.builder(
             itemCount: members.length,
             itemBuilder: (BuildContext context, int index) {
               final member = members[index];
               final name = member.name;
-              final voteOption = vote.votes[member];
+              final voteOption = state.vote.votes[member];
 
               return Column(
                 children: [
                   ListTile(
-                    onTap: () =>
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => MkVoteWidget(member: member))),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) {
+                      return BlocProvider(
+                        create: (context) => VotingBloc(member: member, voteBloc: context.read<VoteBloc>()),
+                        child: MkVoteWidget(member: member),
+                      );
+                    })),
                     leading: CircleAvatar(
                       child: new Icon(Icons.account_box),
                     ),
