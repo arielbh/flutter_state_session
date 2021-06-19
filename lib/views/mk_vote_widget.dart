@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:knesset_app/app_bar.dart';
 import 'package:knesset_app/models/mk.dart';
 import 'package:knesset_app/models/vote.dart';
+import 'package:provider/provider.dart';
 
 class MkVoteWidget extends StatefulWidget {
   final KnessetMember member;
@@ -75,6 +76,7 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
 
   void _onVote(BuildContext context, VoteOptions vote) {
     _timer.cancel();
-    Navigator.pop(context, vote);
+    context.read<Vote>().addVote(widget.member, vote);
+    Navigator.pop(context);
   }
 }

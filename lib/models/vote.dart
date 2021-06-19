@@ -3,12 +3,14 @@ import 'package:knesset_app/models/mk.dart';
 
 enum VoteOptions { favor, oppose, abstain }
 
-class Vote {
+class Vote extends ChangeNotifier {
   final Map<KnessetMember, VoteOptions> votes;
-
   Vote(this.votes);
 
-  void addVote(KnessetMember member, VoteOptions vote) => votes[member] = vote;
+  void addVote(KnessetMember member, VoteOptions vote) {
+    votes[member] = vote;
+    notifyListeners();
+  }
 }
 
 extension VoteOptionsString on VoteOptions {

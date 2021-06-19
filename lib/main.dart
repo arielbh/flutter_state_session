@@ -4,11 +4,18 @@ import 'package:knesset_app/models/mk.dart';
 import 'package:knesset_app/models/vote.dart';
 import 'package:knesset_app/services/mk_data_service.dart';
 import 'package:knesset_app/views/mk_list_widget.dart';
-import 'package:knesset_app/views/mk_vote_widget.dart';
 import 'package:knesset_app/views/vote_totals_widget.dart';
+import 'package:provider/provider.dart';
 
+//TODO: Empasize the root provider and Vote is now notifier
 void main() {
-  runApp(MyApp());
+  runApp(MultiProvider(
+    providers: [
+      Provider<MkDataService>(create: (_) => MkDataService()),
+      ChangeNotifierProvider(create: (_) => Vote({})),
+    ],
+    child: MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -23,48 +30,27 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-class MyHomePage extends StatefulWidget {
+//TODO: Empasize how most widgets (except vote, tell them why) are now stateless
+class MyHomePage extends StatelessWidget {
   MyHomePage({Key? key}) : super(key: key);
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  List<KnessetMember> _members = [];
-  Vote _vote = Vote({});
-  @override
-  void initState() {
-    super.initState();
-    MkDataService().getMembers().then((value) => setState(() => _members = value.toList()));
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: MyAppBar(),
-        body: _members.isEmpty
-            ? Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  VoteTotalsWidget(vote: _vote),
-                  Expanded(
-                    child: MkListWidget(
-                        members: _members,
-                        vote: _vote,
-                        onSelectMember: (member) async {
-                          final vote = await Navigator.push<VoteOptions>(context, MaterialPageRoute(builder: (context) {
-                            return MkVoteWidget(member: member);
-                          }));
-                          if (vote != null) {
-                            setState(() {
-                              _vote.addVote(member, vote);
-                            });
-                          }
-                        }),
-                  ),
-                ],
-              ));
+        body: FutureBuilder<Iterable<KnessetMember>>(
+            future: context.watch<MkDataService>().getMembers(),
+            initialData: [],
+            builder: (context, result) {
+              final members = result.data?.toList() ?? [];
+              return members.isEmpty
+                  ? Center(child: CircularProgressIndicator())
+                  : Column(children: [
+                      VoteTotalsWidget(),
+                      Expanded(
+                        child: MkListWidget(members: members),
+                      ),
+                    ]);
+            }));
   }
 }
