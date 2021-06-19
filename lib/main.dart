@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:knesset_app/app_bar.dart';
-import 'package:knesset_app/stores/members_store.dart';
-import 'package:knesset_app/stores/vote_store.dart';
+import 'package:knesset_app/providers/providers.dart';
 import 'package:knesset_app/views/mk_list_widget.dart';
 import 'package:knesset_app/views/vote_totals_widget.dart';
 
-final membersStore = MembersStore();
-final voteStore = VoteStore();
-
 void main() {
-  runApp(MyApp());
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -21,32 +17,29 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: Scaffold(appBar: MyAppBar(), body: MyHomePage()),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends ConsumerWidget {
   MyHomePage({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    membersStore.load();
-    return Observer(
-      builder: (_) => Scaffold(
-          appBar: MyAppBar(),
-          body: membersStore.members.isEmpty
-              ? Center(child: CircularProgressIndicator())
-              : Column(
-                  children: [
-                    VoteTotalsWidget(),
-                    Expanded(
-                      child: MkListWidget(
-                        members: membersStore.members,
-                      ),
-                    ),
-                  ],
-                )),
+  Widget build(BuildContext context, ScopedReader watch) {
+    final members = watch(membersProvider);
+    return members.when(
+      data: (data) => Column(
+        children: [
+          VoteTotalsWidget(),
+          Expanded(
+            child: MkListWidget(
+              members: data.toList(),
+            ),
+          ),
+        ],
+      ),
+      loading: () => Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Text("Try again later."),
     );
   }
 }

@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:knesset_app/models/mk.dart';
-import 'package:mobx/mobx.dart';
-part 'vote.g.dart';
 
 enum VoteOptions { favor, oppose, abstain }
 
+class Vote {
+  final Map<KnessetMember, VoteOptions> votes;
 
-class Vote = VoteBase with _$Vote;
+  Vote(this.votes);
 
-abstract class VoteBase with Store {
-  @observable
-  ObservableMap<KnessetMember, VoteOptions> votes = ObservableMap();
-
-  void addVote(KnessetMember member, VoteOptions vote) {
-    votes[member] = vote;
-  } 
+  void addVote(KnessetMember member, VoteOptions vote) => votes[member] = vote;
 }
 
 extension VoteOptionsString on VoteOptions {
