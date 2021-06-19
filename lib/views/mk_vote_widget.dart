@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_redux/flutter_redux.dart';
 import 'package:knesset_app/app_bar.dart';
-import 'package:knesset_app/models/app_state.dart';
+import 'package:knesset_app/main.dart';
 import 'package:knesset_app/models/mk.dart';
 import 'package:knesset_app/models/vote.dart';
-import 'package:redux/redux.dart';
 
 class MkVoteWidget extends StatefulWidget {
   final KnessetMember member;
@@ -25,9 +23,7 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
     super.initState();
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (_secondsToVote == 0) {
-        final store = StoreProvider.of<AppState>(context);
-
-        _onVote(store, VoteOptions.abstain);
+        _onVote(context, VoteOptions.abstain);
         return;
       }
       setState(() {
@@ -36,21 +32,19 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
     });
   }
 
-  Widget _createVoteButton(Store<AppState> store, VoteOptions vote) => Padding(
+  Widget _createVoteButton(BuildContext context, VoteOptions vote) => Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
           child: Text(vote.display),
           style: ButtonStyle(backgroundColor: MaterialStateProperty.all<Color>(vote.color)),
-          onPressed: () => _onVote(store, vote)));
+          onPressed: () => _onVote(context, vote)));
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final store = StoreProvider.of<AppState>(context);
-
     return WillPopScope(
       onWillPop: () async {
-        _onVote(store, VoteOptions.abstain);
+        _onVote(context, VoteOptions.abstain);
         return Future.value(false);
       },
       child: Scaffold(
@@ -70,9 +64,9 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
               style: theme.textTheme.headline5,
             ),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _createVoteButton(store, VoteOptions.favor),
-              _createVoteButton(store, VoteOptions.abstain),
-              _createVoteButton(store, VoteOptions.oppose)
+              _createVoteButton(context, VoteOptions.favor),
+              _createVoteButton(context, VoteOptions.abstain),
+              _createVoteButton(context, VoteOptions.oppose)
             ])
           ],
         ),
@@ -80,9 +74,9 @@ class _MkVoteWidgetState extends State<MkVoteWidget> {
     );
   }
 
-  void _onVote(Store<AppState> store, VoteOptions vote) {
+  void _onVote(BuildContext context, VoteOptions vote) {
     _timer.cancel();
-    store.dispatch(Map<KnessetMember, VoteOptions>()..[widget.member] = vote);
-    Navigator.pop(context);
+    locator<Vote>().addVote(widget.member, vote);
+    Navigator.pop(context, vote);
   }
 }
